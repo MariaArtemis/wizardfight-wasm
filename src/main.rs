@@ -216,6 +216,8 @@ impl Game {
         }
         self.evaluate(Side::Left, leftaction, rightaction);
         self.evaluate(Side::Right, rightaction, leftaction);
+        self.add_mana(Side::Left, -1);
+        self.add_mana(Side::Right, -1);
         println!("Left wizard chose {leftaction:?}");
         println!("Right wizard chose {rightaction:?}");
         println!("L: {}, R: {}", self.left_wizard.health, self.right_wizard.health);
