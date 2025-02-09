@@ -64,7 +64,7 @@ struct Wizard {
 impl Wizard {
     fn new() -> Wizard {
         Wizard {
-            health: 15,
+            health: 25,
             mana: 1,
         }
     }
