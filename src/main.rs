@@ -164,22 +164,22 @@ impl Game {
         // Filters illegal moves
         match leftaction {
             Action::Fireball => {
-                if self.left_wizard.mana < rightaction.mana_cost() as u8 {
+                if self.left_wizard.mana < leftaction.mana_cost() as u8 {
                     return Err(anyhow!("Left wizard tried to do an illegal move."));
                 }
             }
             Action::LightningBolt => {
-                if self.left_wizard.mana < rightaction.mana_cost() as u8 {
+                if self.left_wizard.mana < leftaction.mana_cost() as u8 {
                     return Err(anyhow!("Left wizard tried to do an illegal move."));
                 }
             }
             Action::ManaShield => {
-                if self.left_wizard.mana < rightaction.mana_cost() as u8 {
+                if self.left_wizard.mana < leftaction.mana_cost() as u8 {
                     return Err(anyhow!("Left wizard tried to do an illegal move."));
                 }
             }
             Action::Reflect => {
-                if self.left_wizard.mana < rightaction.mana_cost() as u8 {
+                if self.left_wizard.mana < leftaction.mana_cost() as u8 {
                     return Err(anyhow!("Left wizard tried to do an illegal move."));
                 }
             }
@@ -218,21 +218,30 @@ impl Game {
         self.evaluate(Side::Right, rightaction, leftaction);
         self.add_mana(Side::Left, -1);
         self.add_mana(Side::Right, -1);
-        println!("Left wizard chose {leftaction:?}");
-        println!("Right wizard chose {rightaction:?}");
-        println!("L: {}, R: {}", self.left_wizard.health, self.right_wizard.health);
         Ok(())
     }
 }
 
 fn main() {
-    let mut game = Game::new();
-    while !game.game_completed().0 {
-        let mut actions = vec![Action::ManaShield, Action::Reflect, Action::Concentrate, Action::Fireball, Action::Strike, Action::LightningBolt];
-        let player1 = actions.choose(&mut rand::rng()).unwrap();
-        let player2 = actions.choose(&mut rand::rng()).unwrap();
+    let mut leftwizard_wins = 0;
+    let mut rightwizard_wins = 0;
+    let mut ties = 0;
+    for x in 0..1_000_000 {
+        let mut game = Game::new();
+        while !game.game_completed().0 {
+            let mut actions = vec![Action::ManaShield, Action::Reflect, Action::Concentrate,
+                                   Action::Fireball, Action::Strike, Action::LightningBolt];
+            let player1 = actions.choose(&mut rand::rng()).unwrap();
+            let player2 = actions.choose(&mut rand::rng()).unwrap();
 
-        let _ = game.tick(player1.clone(), player2.clone());
+            let _ = game.tick(player1.clone(), player2.clone());
+        }
+        match game.game_completed().1 {
+            Side::Left => leftwizard_wins += 1,
+            Side::Right => rightwizard_wins += 1,
+            Side::Neither => ties += 1,
+        }
     }
-    println!("Game completed. The winner is the {:?} wizard", game.game_completed().1);
+
+    println!("L: {}, R: {}, T: {}", leftwizard_wins, rightwizard_wins, ties);
 }
