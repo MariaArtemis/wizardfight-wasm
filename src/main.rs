@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
-use std::cmp::PartialEq;
 use rand::prelude::IndexedRandom;
+use std::cmp::PartialEq;
 /*
 Wizard duel
 Simultaneous
@@ -126,27 +126,13 @@ impl Game {
     }
 
     fn evaluate(&mut self, attacker_side: Side, attacker: Action, defender: Action) {
-        let defender_side = if attacker_side == Side::Left { Side::Right } else { Side::Left };
+        let defender_side = if attacker_side == Side::Left {
+            Side::Right
+        } else {
+            Side::Left
+        };
         match attacker {
-            Action::Strike => {
-                if defender == Action::Reflect {
-                    self.damage_wizard(attacker_side, attacker.damage_amnt());
-                } else if defender == Action::ManaShield {
-                    ()
-                } else {
-                    self.damage_wizard(defender_side, attacker.damage_amnt());
-                }
-            }
-            Action::Fireball => {
-                if defender == Action::Reflect {
-                    self.damage_wizard(attacker_side, attacker.damage_amnt());
-                } else if defender == Action::ManaShield {
-                    ()
-                } else {
-                    self.damage_wizard(defender_side, attacker.damage_amnt());
-                }
-            }
-            Action::LightningBolt => {
+            Action::Strike | Action::Fireball | Action::LightningBolt => {
                 if defender == Action::Reflect {
                     self.damage_wizard(attacker_side, attacker.damage_amnt());
                 } else if defender == Action::ManaShield {
@@ -163,22 +149,7 @@ impl Game {
     pub fn tick(&mut self, leftaction: Action, rightaction: Action) -> Result<()> {
         // Filters illegal moves
         match leftaction {
-            Action::Fireball => {
-                if self.left_wizard.mana < leftaction.mana_cost() as u8 {
-                    return Err(anyhow!("Left wizard tried to do an illegal move."));
-                }
-            }
-            Action::LightningBolt => {
-                if self.left_wizard.mana < leftaction.mana_cost() as u8 {
-                    return Err(anyhow!("Left wizard tried to do an illegal move."));
-                }
-            }
-            Action::ManaShield => {
-                if self.left_wizard.mana < leftaction.mana_cost() as u8 {
-                    return Err(anyhow!("Left wizard tried to do an illegal move."));
-                }
-            }
-            Action::Reflect => {
+            Action::Fireball | Action::LightningBolt | Action::ManaShield | Action::Reflect => {
                 if self.left_wizard.mana < leftaction.mana_cost() as u8 {
                     return Err(anyhow!("Left wizard tried to do an illegal move."));
                 }
@@ -186,22 +157,7 @@ impl Game {
             _ => (),
         }
         match rightaction {
-            Action::Fireball => {
-                if self.right_wizard.mana < rightaction.mana_cost() as u8 {
-                    return Err(anyhow!("Right wizard did not have enough mana."));
-                }
-            }
-            Action::LightningBolt => {
-                if self.right_wizard.mana < rightaction.mana_cost() as u8 {
-                    return Err(anyhow!("Right wizard did not have enough mana."));
-                }
-            }
-            Action::ManaShield => {
-                if self.right_wizard.mana < rightaction.mana_cost() as u8 {
-                    return Err(anyhow!("Right wizard did not have enough mana."));
-                }
-            }
-            Action::Reflect => {
+            Action::Fireball | Action::LightningBolt | Action::ManaShield | Action::Reflect => {
                 if self.right_wizard.mana < rightaction.mana_cost() as u8 {
                     return Err(anyhow!("Right wizard did not have enough mana."));
                 }
@@ -218,6 +174,7 @@ impl Game {
         self.evaluate(Side::Right, rightaction, leftaction);
         self.add_mana(Side::Left, -1);
         self.add_mana(Side::Right, -1);
+        self.turn_count += 1;
         Ok(())
     }
 }
@@ -226,11 +183,17 @@ fn main() {
     let mut leftwizard_wins = 0;
     let mut rightwizard_wins = 0;
     let mut ties = 0;
-    for x in 0..1_000_000 {
+    for _ in 0..1_000_000 {
         let mut game = Game::new();
         while !game.game_completed().0 {
-            let mut actions = vec![Action::ManaShield, Action::Reflect, Action::Concentrate,
-                                   Action::Fireball, Action::Strike, Action::LightningBolt];
+            let actions = vec![
+                Action::ManaShield,
+                Action::Reflect,
+                Action::Concentrate,
+                Action::Fireball,
+                Action::Strike,
+                Action::LightningBolt,
+            ];
             let player1 = actions.choose(&mut rand::rng()).unwrap();
             let player2 = actions.choose(&mut rand::rng()).unwrap();
 
@@ -243,5 +206,8 @@ fn main() {
         }
     }
 
-    println!("L: {}, R: {}, T: {}", leftwizard_wins, rightwizard_wins, ties);
+    println!(
+        "L: {}, R: {}, T: {}",
+        leftwizard_wins, rightwizard_wins, ties
+    );
 }
